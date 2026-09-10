@@ -9,16 +9,16 @@ place you can go read it working.
 
 | Pattern | One-line purpose | Live in this repo |
 |---|---|---|
-| [Strategy](#strategy) | Swap an algorithm without touching the caller | Pricing · Pieces · Rate limiters · Splits |
+| [Strategy](#strategy) | Swap an algorithm without touching the caller | Pricing · Pieces · Rate limiters · Splits · Dispatch |
 | [Factory](#factory) | Decide *which* class to build, in one place | `PriceFactory` · `PieceFactory` · `RateLimiterFactory` |
 | [Singleton](#singleton) | One instance for the whole process | `ParkingLot` · `BankServer` · `Logger` |
-| [Facade](#facade) | A small, task-shaped API over a subsystem | `Gate` · `LockerController` · `BookingService` |
+| [Facade](#facade) | A small, task-shaped API over a subsystem | `Gate` · `LockerController` · `BookingService` · `ElevatorSystem` |
 | [Command](#command) | Package an action as a reversible object | `Move` in chess |
-| [Observer](#observer) | One event, many listeners | `Logger` → N appenders |
+| [Observer](#observer) | One event, many listeners | `Logger` → N appenders · car events → displays, metrics |
 | [Decorator](#decorator) | Add behaviour by wrapping, not subclassing | `AsyncAppender` |
 | [Composite](#composite) | Treat one and many identically | `MultiChannelNotification` |
 | [Chain of Responsibility](#chain-of-responsibility) | Pass a request along until someone handles it | `LogHandler` (and why not to) |
-| [State machine](#state-machine) | Legal operations depend on where you are | `ATMState` · `BookingStatus` |
+| [State machine](#state-machine) | Legal operations depend on where you are | `ATMState` · `BookingStatus` · `Elevator` |
 
 ---
 
@@ -50,9 +50,17 @@ to extension, closed to modification.
 - [`05_rate_limiter`](../05_rate_limiter/) — four genuinely different algorithms
 - [`06_splitwise`](../06_splitwise/) — `SplitStrategy`, where each one validates its own input
 - [`07_book_my_show`](../07_book_my_show/) — `LockProvider`, in-memory vs Redis
+- [`09_elevator_system`](../09_elevator_system/) — `DispatchStrategy`, the one
+  where the strategies are *ranked by a benchmark* rather than by argument
 
 **Tell.** Any time you catch yourself writing `if type == A: ... elif type == B:`
 for the second time.
+
+**The Strategy nobody talks about: keeping the bad one.**
+[`09`](../09_elevator_system/) ships `NearestCarDispatcher` even though it is
+the wrong answer, because the interface makes the naive policy *measurable*
+instead of merely rejected. When someone proposes it in a design review, a
+number ends the conversation faster than an opinion does.
 
 ---
 
@@ -194,7 +202,14 @@ That snapshot-then-fan-out is worth copying: a slow listener must not block
 other threads from publishing.
 
 **In this repo:** [`04_logger_system`](../04_logger_system/) — `Logger` → N
-`Appender`s.
+`Appender`s; [`09_elevator_system`](../09_elevator_system/) — one event stream,
+consumed by both a display and a metrics collector.
+
+**The tell that Observer is earning its keep**, rather than being decoration:
+you can add a consumer that the subject would have been *embarrassed* to know
+about. `WaitTimeMetrics` in [`09`](../09_elevator_system/) turns car events into
+"how long did each passenger wait" — the alternative is an `Elevator` holding a
+reference to a monitoring object, i.e. a lift that knows about dashboards.
 
 ---
 
@@ -284,7 +299,14 @@ have unreachable and un-exitable corners.
 
 **In this repo:** [`02_atm`](../02_atm/) — `ATMState`;
 [`07_book_my_show`](../07_book_my_show/) — `SeatStatus` / `BookingStatus` /
-`PaymentStatus`.
+`PaymentStatus`; [`09_elevator_system`](../09_elevator_system/) — `Elevator`,
+where the states are physical and the priority order *is* the safety interlock:
+doors beat motion, motion beats idling. A car that can move with its doors open
+is not a state-machine bug, it is a guillotine.
+
+**Doors-open is a state, not a `sleep`.** Any time you are tempted to block a
+thread to represent "this takes a while", you are hiding a state that other
+code needs to be able to see and test.
 
 ---
 
