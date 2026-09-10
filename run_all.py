@@ -2,7 +2,7 @@
 """
 Run every design in this repo end to end.
 
-    python run_all.py            # run all 8
+    python run_all.py            # run all 9
     python run_all.py chess atm  # run the ones whose folder matches
 
 This is the repo's smoke test: if a file stops running, this fails loudly.
@@ -26,6 +26,7 @@ DESIGNS = [
     ("06_splitwise", "splitwise.py"),
     ("07_book_my_show", "book_my_show.py"),
     ("08_chess_game", "chess_game.py"),
+    ("09_elevator_system", "elevator_system.py"),
 ]
 
 

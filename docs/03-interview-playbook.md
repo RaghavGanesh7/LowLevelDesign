@@ -110,6 +110,8 @@ answer is written out.
 | *"Is that optimal?"* | [`06`](../06_splitwise/) greedy vs NP-hard |
 | *"What about money/rounding?"* | [`06`](../06_splitwise/) integer cents |
 | *"Why not a Singleton here?"* | [`08`](../08_chess_game/) one game vs a server of games |
+| *"Which of your two designs is better?"* | [`09`](../09_elevator_system/) benchmark them; the plausible one lost |
+| *"How do you know nobody starves?"* | [`09`](../09_elevator_system/) the aging term, and what turning it up costs |
 
 ---
 
@@ -132,7 +134,16 @@ payments system stores minor units. See [`06`](../06_splitwise/).
 make wall clock jump backwards. A rate limiter on wall clock hands out free
 resets. See [`05`](../05_rate_limiter/).
 
-**5. Permanent facts never live in something with a TTL.** A lock, a cache
+**5. Make time an input, not something the code reaches out and reads.**
+A design that calls `sleep()` and `now()` internally can only be tested by
+waiting, and its concurrency tests are flaky by construction.
+[`09`](../09_elevator_system/) advances an integer `tick`, which is what lets it
+benchmark three scheduling policies on byte-identical traffic. Compare
+[`05`](../05_rate_limiter/), whose contract genuinely *is* about seconds — so it
+injects nothing but does use a monotonic clock. The rule is not "never use a
+clock", it is "let the test decide what time it is".
+
+**6. Permanent facts never live in something with a TTL.** A lock, a cache
 entry, a session — none of them are a system of record. This is the exact bug
 in [`07`](../07_book_my_show/): a sale recorded only as a lock became
 re-bookable five minutes later.
@@ -149,5 +160,11 @@ re-bookable five minutes later.
   Abstraction has a cost; pay it when you can name the second implementation.
 - **Claiming optimality.** If you are not sure, say "greedy, and I believe the
   exact version is harder — let me think about the bound".
+- **Asserting that your policy is better.** Two reasonable heuristics disagree
+  all the time, and the plausible one loses often enough that "plausible" is
+  not evidence. [`09`](../09_elevator_system/) is the worked example: the smart
+  dispatcher, as first written, was beaten by the dumb one, and nothing but a
+  measurement said so. Saying "I'd want to measure this, and here is the
+  workload I'd measure it on" is a stronger answer than a confident guess.
 - **Skipping the failure modes.** "And then we save it to the database" is
   where the interviewer starts asking what happens when that call times out.

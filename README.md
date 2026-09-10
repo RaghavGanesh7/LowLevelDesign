@@ -1,6 +1,6 @@
 # Low Level Design — a readable, runnable study repo
 
-Eight classic LLD interview problems in Python. Every file **runs**, every
+Nine classic LLD interview problems in Python. Every file **runs**, every
 design decision has a **comment explaining why**, and every folder has a
 **README with class diagrams** and a "test yourself" section.
 
@@ -11,7 +11,7 @@ design decision has a **comment explaining why**, and every folder has a
 
 ```bash
 git clone <this-repo> && cd LowLevelDesign
-python run_all.py              # run all 8 designs end to end
+python run_all.py              # run all 9 designs end to end
 python run_all.py chess        # or just one
 ```
 
@@ -19,7 +19,7 @@ No dependencies. Python 3.8+. Nothing to install.
 
 ---
 
-## The eight designs
+## The nine designs
 
 | # | Design | Difficulty | The one thing it teaches | Patterns |
 |---|---|---|---|---|
@@ -31,6 +31,7 @@ No dependencies. Python 3.8+. Nothing to install.
 | [06](06_splitwise/) | **Splitwise** | ★★★★☆ | Net balances, greedy settlement, **integer cents** | Strategy · Factory · Facade |
 | [07](07_book_my_show/) | **BookMyShow** | ★★★★☆ | The **two-phase hold** — and that locks expire | Strategy · State · Facade · DI |
 | [08](08_chess_game/) | **Chess** | ★★★★★ | **Pseudo-legal vs legal**, tested by simulation | Strategy · Command · Factory |
+| [09](09_elevator_system/) | **Elevator System** 🆕 | ★★★★☆ | The nearest car is **not the soonest car** | State · Strategy · Observer · Facade |
 
 ### Shared notes
 
@@ -48,7 +49,7 @@ No dependencies. Python 3.8+. Nothing to install.
 ```mermaid
 flowchart TD
     R["README.md<br/><i>you are here</i>"] --> D["docs/<br/>patterns · SOLID · playbook"]
-    R --> P["01…08 — one folder per problem"]
+    R --> P["01…09 — one folder per problem"]
     P --> PY["<b>problem.py</b><br/>heavily commented source<br/>+ a runnable _demo()"]
     P --> MD["<b>README.md</b><br/>requirements · class diagram<br/>sequence/state diagram<br/>what was fixed · test yourself"]
     R --> RA["run_all.py<br/><i>smoke test — all 8</i>"]
@@ -92,8 +93,9 @@ simplest and each one adds an idea.
 are the two that generate the hardest follow-up questions.
 
 **If you want the interesting algorithms**, go straight to `05` (four rate
-limiters and their failure modes), `06` (greedy debt settlement) and `08`
-(move generation + check detection).
+limiters and their failure modes), `06` (greedy debt settlement), `08`
+(move generation + check detection) and `09` (three dispatch policies, ranked
+by a benchmark rather than by argument).
 
 ---
 
@@ -136,9 +138,21 @@ each folder's README. The ones worth knowing:
 | **Splitwise** | Money as `float` | `0.1 + 0.2 != 0.3` — cents evaporate |
 | **Parking Lot** | No locking; leaky singleton; `-1` sentinel returns | Two cars, one spot |
 
+### The ninth design
+
+`01`–`08` are rewrites of the upstream problems.
+[`09_elevator_system`](09_elevator_system/) is **new** — the classic LLD
+question the original set leaves out, and the only one here whose central bug
+is not a race or a rounding error but a *policy that is merely plausible*. It
+ships with a seeded benchmark, because the naive dispatcher and the good one
+both work, and only a measurement separates them. The first "smart" cost model
+written for it lost to the dumb one; the benchmark is what caught that, and
+[the folder README](09_elevator_system/#the-bug-i-wrote-and-how-the-benchmark-caught-it)
+shows the numbers.
+
 ### What was added
 
-- **Runnable demos** — `python run_all.py` exercises all 8, including the
+- **Runnable demos** — `python run_all.py` exercises all 9, including the
   concurrency scenarios (10 threads racing for one seat, 20 threads hammering
   one rate limiter)
 - **Diagrams** — class, sequence, state and flow diagrams in Mermaid, which
